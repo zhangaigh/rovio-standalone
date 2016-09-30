@@ -11,6 +11,8 @@
 #include "rovio/RovioManger.hpp"
 
 #include "rovio/Time.hpp"
+#include "rovio/RovioScene.hpp"
+
 
 #ifdef ROVIO_NMAXFEATURE
 static constexpr int nMax_ = ROVIO_NMAXFEATURE;
@@ -42,10 +44,19 @@ static constexpr int nPose_ = ROVIO_NPOSE;
 static constexpr int nPose_ = 0; // Additional pose states.
 #endif
 
+
+typedef rovio::RovioFilter<rovio::FilterState<nMax_,nLevels_,patchSize_,nCam_,nPose_>> mtFilter;
+
+static rovio::RovioScene<mtFilter> mRovioScene;
+
+void idleFunc(){
+  mRovioScene.drawScene(mRovioScene.mpFilter_->safe_);
+}
+
 int main ( int argc, char** argv )
 {
 
-    typedef rovio::RovioFilter<rovio::FilterState<nMax_,nLevels_,patchSize_,nCam_,nPose_>> mtFilter;
+
 
     std::string Config_Path = argv[1];
     std::string path = argv[2];
@@ -130,6 +141,12 @@ int main ( int argc, char** argv )
     okvis::Time start ( 0.0 );
     int counter = 0;
 
+              std::string mVSFileName = "../shaders/shader.vs";
+          std::string mFSFileName = "../shaders/shader.fs";
+          mRovioScene.initScene(argc,argv,mVSFileName,mFSFileName,mpFilter);
+                   mRovioScene.addKeyboardCB('r',[&rovioNode]() mutable {rovioNode.requestReset();});
+          //glutMainLoop();
+
     while ( true )
     {
         // check if at the end
@@ -209,6 +226,10 @@ int main ( int argc, char** argv )
             }
 
             cam_iterators[i]++;
+
+            mRovioScene.setIdleFunction(idleFunc);
+         // mRovioScene.addKeyboardCB('r',[&rovioNode]() mutable {rovioNode.requestReset();});
+          //glutMainLoop();
         }
         ++counter;
 
@@ -219,6 +240,14 @@ int main ( int argc, char** argv )
                       << int ( double ( counter ) / double ( num_camera_images ) * 100 ) << "%  "
                       << std::flush;
         }
+
+          /*
+          // Scene
+
+          mRovioScene.setIdleFunction(idleFunc);
+          mRovioScene.addKeyboardCB('r',[&rovioNode]() mutable {rovioNode.requestReset();});
+         // glutMainLoop();
+         */
     }
 
     return 0;

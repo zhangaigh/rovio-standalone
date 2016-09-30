@@ -16,6 +16,25 @@ FIND_PACKAGE(Boost COMPONENTS filesystem system REQUIRED)
 FIND_PACKAGE(OpenCV REQUIRED)
 include_directories ( ${OpenCV_INCLUDE_DIRS})
 
+######## Find OpenGL lib###########
+	find_package(GLEW REQUIRED)
+	include_directories(${GLEW_INCLUDE_DIRS})
+
+	find_package(GLUT REQUIRED)
+	include_directories(${GLUT_INCLUDE_DIRS})
+	link_directories(${GLUT_LIBRARY_DIRS})
+	add_definitions(${GLUT_DEFINITIONS})
+
+	find_package(OpenGL REQUIRED)
+	include_directories(${OpenGL_INCLUDE_DIRS})
+	link_directories(${OpenGL_LIBRARY_DIRS})
+	add_definitions(${OpenGL_DEFINITIONS})
+
+
+##################################
+
+
+
 add_library(${PROJECT_NAME}
 src/Camera.cpp
 src/FeatureCoordinates.cpp
@@ -45,11 +64,16 @@ include/rovio/RovioScene.hpp
 include/rovio/Scene.hpp
 include/rovio/Time.hpp
 include/rovio/ZeroVelocityUpdate.hpp
+src/Scene.cpp
 )
 target_link_libraries(${PROJECT_NAME}
    ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
     libyaml-cpp.a
+    ${OpenMP_EXE_LINKER_FLAGS} 
+    ${OPENGL_LIBRARIES} 
+    ${GLUT_LIBRARY} 
+    ${GLEW_LIBRARY}
 )
 
 add_executable(rovio_src 
@@ -62,6 +86,10 @@ target_link_libraries(rovio_src
     ${OpenCV_LIBS}
     ${Boost_LIBRARIES}
     libyaml-cpp.a
+    ${OpenMP_EXE_LINKER_FLAGS} 
+    ${OPENGL_LIBRARIES} 
+    ${GLUT_LIBRARY} 
+    ${GLEW_LIBRARY}
 )
 
 
