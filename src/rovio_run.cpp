@@ -47,11 +47,6 @@ static constexpr int nPose_ = 0; // Additional pose states.
 
 typedef rovio::RovioFilter<rovio::FilterState<nMax_,nLevels_,patchSize_,nCam_,nPose_>> mtFilter;
 
-static rovio::RovioScene<mtFilter> mRovioScene;
-
-void idleFunc(){
-  mRovioScene.drawScene(mRovioScene.mpFilter_->safe_);
-}
 
 int main ( int argc, char** argv )
 {
@@ -141,10 +136,7 @@ int main ( int argc, char** argv )
     okvis::Time start ( 0.0 );
     int counter = 0;
 
-              std::string mVSFileName = "../shaders/shader.vs";
-          std::string mFSFileName = "../shaders/shader.fs";
-          mRovioScene.initScene(argc,argv,mVSFileName,mFSFileName,mpFilter);
-                   mRovioScene.addKeyboardCB('r',[&rovioNode]() mutable {rovioNode.requestReset();});
+
           //glutMainLoop();
 
     while ( true )
@@ -168,9 +160,9 @@ int main ( int argc, char** argv )
                                    path + "/cam" + std::to_string ( i ) + "/data/" + *cam_iterators.at ( i ),
                                    cv::IMREAD_GRAYSCALE );
             std::string nanoseconds = cam_iterators.at ( i )->substr (
-                                          cam_iterators.at ( i )->size() - 13, 9 );
+                                          cam_iterators.at ( i )->size() - 7, 3 ) + "000000";
             std::string seconds = cam_iterators.at ( i )->substr (
-                                      0, cam_iterators.at ( i )->size() - 13 );
+                                      0, cam_iterators.at ( i )->size() - 7 );
             t = okvis::Time ( atoi ( seconds.c_str() ), atoi ( nanoseconds.c_str() ) );
             if ( start == okvis::Time ( 0.0 ) )
             {
@@ -179,6 +171,9 @@ int main ( int argc, char** argv )
 
             // get all IMU measurements till then
             okvis::Time t_imu = start;
+            Eigen::Vector3d gyr;
+            Eigen::Vector3d acc;
+                
             do
             {
                 if ( !std::getline ( imu_file, line ) )
@@ -194,14 +189,12 @@ int main ( int argc, char** argv )
                 std::string nanoseconds = s.substr ( s.size() - 9, 9 );
                 std::string seconds = s.substr ( 0, s.size() - 9 );
 
-                Eigen::Vector3d gyr;
                 for ( int j = 0; j < 3; ++j )
                 {
                     std::getline ( stream, s, ',' );
                     gyr[j] = std::atof ( s.c_str() );
                 }
 
-                Eigen::Vector3d acc;
                 for ( int j = 0; j < 3; ++j )
                 {
                     std::getline ( stream, s, ',' );
@@ -211,23 +204,41 @@ int main ( int argc, char** argv )
                 t_imu = okvis::Time ( std::atoi ( seconds.c_str() ), std::atoi ( nanoseconds.c_str() ) );
 
                 // add the IMU measurement for (blocking) processing
-                if ( t_imu - start + okvis::Duration ( 1.0 ) > deltaT )
+            //    if ( t_imu - start + okvis::Duration ( 1.0 ) > deltaT )
+            //     {
+            //        rovioNode.imuCallback ( gyr,acc,t_imu.toSec() );
+            //    }
+
+
+                if (t > t_imu)
                 {
+                      std::cout << "IMU update ...... Time = "<<std::setprecision ( 19 )<<t_imu.toSec()<<std::endl<<std::endl;
+                    rovioNode.imuCallback ( gyr,acc,t_imu.toSec() );
+                }
+                else if (t == t_imu)
+                {
+                    rovioNode.imuCallback ( gyr,acc,t_imu.toSec() );
+                    rovioNode.imgCallback ( filtered,t.toSec(), i );
+                }
+                else
+                {
+                    rovioNode.imgCallback ( filtered,t.toSec(), i );
                     rovioNode.imuCallback ( gyr,acc,t_imu.toSec() );
                 }
 
             }
-            while ( t_imu +okvis::Duration ( 0.004 ) <= t );
+            while ( t_imu < t );//( t_imu +okvis::Duration ( 0.004 ) <= t );
+
+            //std::cout << "IMU update ...... Time = "<<std::setprecision ( 19 )<<t_imu.toSec()<<std::endl<<std::endl;
 
             // add the image to the frontend for (blocking) processing
             if ( t - start > deltaT )
             {
-                rovioNode.imgCallback ( filtered,t.toSec(), i );
+               // rovioNode.imgCallback ( filtered,t.toSec(), i );
             }
 
             cam_iterators[i]++;
 
-            mRovioScene.setIdleFunction(idleFunc);
          // mRovioScene.addKeyboardCB('r',[&rovioNode]() mutable {rovioNode.requestReset();});
           //glutMainLoop();
         }

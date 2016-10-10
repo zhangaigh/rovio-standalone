@@ -320,7 +320,7 @@ public:
         std::lock_guard<std::mutex> lock ( m_filter_ );
         static unsigned nCount = 0;//调用计数
         std::cout << std::setprecision ( 19 );
-        std::cout << "IMU input = "<<nCount++<<std::endl<<" gyr ="<<std::endl<<gyr<<";\r\n acc ="<<std::endl<<acc<<"; \r\nTime = "<<dTime<<std::endl<<std::endl;
+
         
         predictionMeas_.template get<mtPredictionMeas::_gyr>() = gyr;
         predictionMeas_.template get<mtPredictionMeas::_acc>() = acc;
@@ -370,7 +370,6 @@ public:
         static unsigned nCount = 0;
         std::cout << std::setprecision ( 19 );                
         std::cout<<"Image input = "<<nCount++<<" camID = "<<camID<<"; msgTime = " << std::setprecision ( 19 )<<msgTime<<std::endl<<std::endl;
-        
         if ( init_state_.isInitialized() && !cv_img.empty() )
         {
             if ( msgTime != imgUpdateMeas_.template get<mtImgMeas::_aux>().imgTime_ )
