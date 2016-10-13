@@ -93,6 +93,22 @@ target_link_libraries(rovio_src
 )
 
 
+add_executable(rovio_kitti 
+src/rovio_run_kitti.cpp
+src/Duration.cpp
+src/Time.cpp
+)
+target_link_libraries(rovio_kitti
+    ${PROJECT_NAME}
+    ${OpenCV_LIBS}
+    ${Boost_LIBRARIES}
+    libyaml-cpp.a
+    ${OpenMP_EXE_LINKER_FLAGS} 
+    ${OPENGL_LIBRARIES} 
+    ${GLUT_LIBRARY} 
+    ${GLEW_LIBRARY}
+)
+
 
 #add_executable(rovio_rosbag_loader src/rovio_rosbag_loader.cpp)
 #target_link_libraries(rovio_rosbag_loader ${PROJECT_NAME}
